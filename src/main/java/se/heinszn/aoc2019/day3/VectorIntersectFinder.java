@@ -3,30 +3,54 @@ package se.heinszn.aoc2019.day3;
 import lombok.Value;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class VectorIntersectFinder {
 
-    private Set<Vector> set1;
-    private Set<Vector> set2;
+    private List<Vector> wire1;
+    private List<Point> wire1Points;
+    private List<Vector> wire2;
+    private List<Point> wire2Points;
 
-    public VectorIntersectFinder(Set<Vector> set1, Set<Vector> set2) {
-        this.set1 = set1;
-        this.set2 = set2;
+    public VectorIntersectFinder(List<Vector> wire1, List<Vector> wire2) {
+        this.wire1 = wire1;
+        this.wire1Points = getWirePoints(wire1);
+        this.wire2 = wire2;
+        this.wire2Points = getWirePoints(wire2);
     }
 
     public List<Point> getIntersections() {
         List<Point> intersections = new ArrayList<>();
-        set1.forEach(v1 -> {
-            set2.forEach(v2 -> {
+        wire1.forEach(v1 -> {
+            wire2.forEach(v2 -> {
                 v1.isIntersecting(v2).ifPresent(intersections::add);
             });
         });
         return intersections.stream().filter(p -> !p.equals(Point.of(0, 0))).collect(Collectors.toList());
+    }
+
+    public Map<Point, Integer> getDistances(List<Point> intersections) {
+        Map<Point, Integer> distances = new HashMap<>();
+        intersections.forEach(i -> distances.put(i, wire1Points.indexOf(i) + wire2Points.indexOf(i)));
+        return distances;
+    }
+
+    private List<Point> getWirePoints(List<Vector> wire) {
+        List<Point> wire1Points = wire.stream()
+                .flatMap(v -> {
+                    List<Point> points = v.getPoints();
+                    return points.subList(0, points.size() - 1).stream();
+                })
+                .collect(Collectors.toList());
+
+        Point lastPoint = wire.get(wire.size() - 1).getEnd();
+        wire1Points.add(Point.of(lastPoint.getX(), lastPoint.getY()));
+        return wire1Points;
     }
 }
 
@@ -60,18 +84,7 @@ class Vector {
             return Optional.empty();
         }
 
-        List<Point> points = new ArrayList<>();
-        List<Point> otherPoints = new ArrayList<>();
-
-        if (vertical) {
-            getRange(start.getY(), end.getY()).mapToObj(y -> Point.of(start.getX(), y)).forEach(points::add);
-            getRange(other.start.getX(), other.end.getX()).mapToObj(x -> Point.of(x, other.start.getY())).forEach(otherPoints::add);
-        } else {
-            getRange(other.start.getY(), other.end.getY()).mapToObj(y -> Point.of(other.start.getX(), y)).forEach(otherPoints::add);
-            getRange(start.getX(), end.getX()).mapToObj(x -> Point.of(x, start.getY())).forEach(points::add);
-        }
-
-        return points.stream().filter(otherPoints::contains).findAny();
+        return getPoints().stream().filter(other.getPoints()::contains).findAny();
     }
 
     private static IntStream getRange(int start, int end) {
@@ -80,6 +93,14 @@ class Vector {
                 start,
                 i -> isPositive ? i <= end : i >= end,
                 i -> isPositive ? i + 1 : i - 1);
+    }
+
+    public List<Point> getPoints() {
+        if (vertical) {
+            return getRange(start.getY(), end.getY()).mapToObj(y -> Point.of(start.getX(), y)).collect(Collectors.toList());
+        } else {
+            return getRange(start.getX(), end.getX()).mapToObj(x -> Point.of(x, start.getY())).collect(Collectors.toList());
+        }
     }
 }
 

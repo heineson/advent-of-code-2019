@@ -1,16 +1,15 @@
 package se.heinszn.aoc2019.day3;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
-import java.util.Set;
 
 public class Day3 {
 
     public static void main(String[] args) {
-        Set<Vector> wire1 = parsePoints(WIRE1);
-        Set<Vector> wire2 = parsePoints(WIRE2);
+        List<Vector> wire1 = parsePoints(WIRE1);
+        List<Vector> wire2 = parsePoints(WIRE2);
 
         VectorIntersectFinder intersectFinder = new VectorIntersectFinder(wire1, wire2);
         List<Point> intersections = intersectFinder.getIntersections();
@@ -19,9 +18,13 @@ public class Day3 {
 
         OptionalInt min = intersections.stream().mapToInt(p -> Math.abs(p.getX()) + Math.abs(p.getY())).min();
         System.out.println("Lowest Manhattan distance: " + min);
+
+        Map<Point, Integer> distances = intersectFinder.getDistances(intersections);
+        System.out.println("Intersection points with distances: " + distances);
+        System.out.println("Lowest distance: " + distances.values().stream().min(Integer::compareTo));
     }
 
-    private static Set<Vector> parsePoints(String[] points) {
+    private static List<Vector> parsePoints(String[] points) {
         List<Vector> vectors = new ArrayList<>();
         Vector lastVector = new Vector(null, Point.of(0, 0), false);
 
@@ -34,7 +37,7 @@ public class Day3 {
             lastVector = v;
         }
 
-        return new HashSet<>(vectors);
+        return vectors;
     }
 
     static final String[] WIRE1 = new String[]{
