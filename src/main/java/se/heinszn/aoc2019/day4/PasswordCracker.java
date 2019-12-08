@@ -16,18 +16,32 @@ public class PasswordCracker {
     }
 
     private boolean matchesRules(int number) {
-        boolean adjacentEquals = false;
-        boolean isOnlyIncreasing = true;
         String asString = String.valueOf(number);
+
         for (int i = 0; i < asString.length() - 1; i++) {
             if (asString.charAt(i) > asString.charAt(i + 1)) {
-                isOnlyIncreasing = false;
-                break;
-            }
-            if (!adjacentEquals && asString.charAt(i) == asString.charAt(i + 1)) {
-                adjacentEquals = true;
+                return false;
             }
         }
-        return adjacentEquals && isOnlyIncreasing;
+
+        while (asString.length() > 1) {
+            char c = asString.charAt(0);
+            int pointer = 1;
+            int count = 1;
+
+            while (c == asString.charAt(pointer)) {
+                count++;
+                if (++pointer >= asString.length()) {
+                    break;
+                }
+            }
+
+            if (count == 2) {
+                return true;
+            }
+            asString = asString.substring(Math.max(1, count - 1));
+        }
+
+        return false;
     }
 }
