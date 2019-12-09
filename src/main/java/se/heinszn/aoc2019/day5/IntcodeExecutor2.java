@@ -54,6 +54,22 @@ public class IntcodeExecutor2 {
             case OP_OUT:
                 System.out.println(getArg(args.get(0)));
                 break;
+            case OP_JIT:
+                if (getArg(args.get(0)) != 0) {
+                    pointer = getArg(args.get(1));
+                }
+                break;
+            case OP_JIF:
+                if (getArg(args.get(0)) == 0) {
+                    pointer = getArg(args.get(1));
+                }
+                break;
+            case OP_LT:
+                program[args.get(2).getValue()] = getArg(args.get(0)) < getArg(args.get(1)) ? 1 : 0;
+                break;
+            case OP_EQ:
+                program[args.get(2).getValue()] = getArg(args.get(0)) == getArg(args.get(1)) ? 1 : 0;
+                break;
             case OP_END:
                 return false;
             default:
@@ -116,6 +132,10 @@ public class IntcodeExecutor2 {
         OP_MULT(2, 3),
         OP_IN(3, 1),
         OP_OUT(4, 1),
+        OP_JIT(5, 2),
+        OP_JIF(6, 2),
+        OP_LT(7, 3),
+        OP_EQ(8, 3),
         OP_END(99, 0);
 
         private int code;
