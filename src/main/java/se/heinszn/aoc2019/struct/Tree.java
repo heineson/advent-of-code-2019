@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @ToString
 public class Tree<T> {
@@ -37,6 +35,35 @@ public class Tree<T> {
 
     public Set<Node<T>> getAllNodes() {
         return Set.copyOf(lookupMap.values());
+    }
+
+    public List<Node<T>> getPathToRoot(T value) {
+        List<Node<T>> list = new ArrayList<>();
+        Node<T> current = findNode(value);
+        while (current != null) {
+            list.add(current);
+            current = current.getParent();
+        }
+        return list;
+    }
+
+    public Node<T> closestCommonAncestor(T v1, T v2) {
+        List<Node<T>> node1ToRoot = getPathToRoot(v1);
+        Node<T> current = findNode(v2);
+        while (!node1ToRoot.contains(current)) {
+            current = current.getParent();
+        }
+        return current;
+    }
+
+    public int distanceToAncestor(Node<T> ancestor, Node<T> startPoint) {
+        Node<T> current = startPoint;
+        int steps = 0;
+        while (current.getValue() != ancestor.getValue()) {
+            steps++;
+            current = current.getParent();
+        }
+        return steps;
     }
 
     @AllArgsConstructor

@@ -39,6 +39,18 @@ public class OrbitMapChecker {
         return orbits;
     }
 
+    public int getTransfers(String from, String to) {
+        Tree.Node<String> fromNode = orbitTree.findNode(from).getParent();
+        Tree.Node<String> toNode = orbitTree.findNode(to).getParent();
+        if (fromNode == null || toNode == null) {
+            throw new IllegalArgumentException("From or to did not orbit any object, from: " + from + ", to: " + to);
+        }
+        Tree.Node<String> ancestor = orbitTree.closestCommonAncestor(fromNode.getValue(), toNode.getValue());
+        int i1 = orbitTree.distanceToAncestor(ancestor, fromNode);
+        int i2 = orbitTree.distanceToAncestor(ancestor, toNode);
+        return i1 + i2;
+    }
+
     @Value
     static class Orbit {
         String parent;

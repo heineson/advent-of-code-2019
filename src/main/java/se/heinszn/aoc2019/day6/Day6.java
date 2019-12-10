@@ -6,9 +6,10 @@ public class Day6 {
     public static void main(String[] args) {
         OrbitMapChecker mapChecker = new OrbitMapChecker(List.of(DAY6_DATA));
         System.out.println("All orbits: " + mapChecker.getAllOrbits());
+        System.out.println("Transfers: " + mapChecker.getTransfers("YOU", "SAN"));
     }
 
-    static String[] TEST = new String[] {
+    static String[] PART1_TEST = new String[] {
             "COM)B",
             "B)C",
             "C)D",
@@ -20,6 +21,22 @@ public class Day6 {
             "E)J",
             "J)K",
             "K)L"
+    };
+
+    static String[] PART2_TEST = new String[] {
+            "COM)B",
+            "B)C",
+            "C)D",
+            "D)E",
+            "E)F",
+            "B)G",
+            "G)H",
+            "D)I",
+            "E)J",
+            "J)K",
+            "K)L",
+            "K)YOU",
+            "I)SAN"
     };
 
     static String[] DAY6_DATA = new String[] {
