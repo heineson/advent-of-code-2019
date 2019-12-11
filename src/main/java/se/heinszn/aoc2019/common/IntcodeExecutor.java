@@ -2,22 +2,31 @@ package se.heinszn.aoc2019.common;
 
 import lombok.Value;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class IntcodeExecutor {
     private int[] program;
     private int pointer;
 
+    private DataInputStream dataInputStream;
+    private DataOutputStream dataOutputStream;
+
     public IntcodeExecutor(int[] program) {
+        this(program, System.in, System.out);
+    }
+
+    public IntcodeExecutor(int[] program, InputStream inputStream, OutputStream outputStream) {
         this.program = program.clone();
+        this.dataInputStream = new DataInputStream(inputStream);
+        this.dataOutputStream = new DataOutputStream(outputStream);
+    }
+
+    public int[] execute() {
+        return execute(Map.of());
     }
 
     public int[] execute(Map<Integer, Integer> modifications) {
@@ -29,7 +38,7 @@ public class IntcodeExecutor {
                 // nuttin'
             }
         } catch (Exception e) {
-            System.out.println(Arrays.toString(program));
+            System.err.println(Arrays.toString(program));
             throw new RuntimeException("Error at " + this.pointer, e);
         }
 
@@ -48,11 +57,14 @@ public class IntcodeExecutor {
                 program[args.get(2).getValue()] = getArg(args.get(0)) * getArg(args.get(1));
                 break;
             case OP_IN:
-                System.out.println("Int value: ");
                 program[args.get(0).getValue()] = read();
                 break;
             case OP_OUT:
-                System.out.println(getArg(args.get(0)));
+                try {
+                    dataOutputStream.writeInt(getArg(args.get(0)));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             case OP_JIT:
                 if (getArg(args.get(0)) != 0) {
@@ -93,8 +105,8 @@ public class IntcodeExecutor {
 
         List<Arg> argList = new ArrayList<>();
         int modes = op / 100;
-        for (int i = 0; i < args.length; i++) {
-            argList.add(Arg.ofCode(modes % 10, args[i]));
+        for (int arg : args) {
+            argList.add(Arg.ofCode(modes % 10, arg));
             modes = modes / 10;
         }
 
@@ -102,8 +114,8 @@ public class IntcodeExecutor {
     }
 
     private int read() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-            return Integer.parseInt(br.readLine());
+        try {
+            return dataInputStream.readInt();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
