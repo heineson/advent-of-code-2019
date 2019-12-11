@@ -1,4 +1,4 @@
-package se.heinszn.aoc2019.day5;
+package se.heinszn.aoc2019.common;
 
 import lombok.Value;
 
@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class IntcodeExecutor2 {
+public class IntcodeExecutor {
     private int[] program;
     private int pointer;
 
-    public IntcodeExecutor2(int[] program) {
+    public IntcodeExecutor(int[] program) {
         this.program = program.clone();
     }
 

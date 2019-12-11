@@ -1,7 +1,7 @@
 package se.heinszn.aoc2019.day6;
 
 import lombok.Value;
-import se.heinszn.aoc2019.struct.Tree;
+import se.heinszn.aoc2019.common.Tree;
 
 import java.util.List;
 import java.util.stream.Collectors;

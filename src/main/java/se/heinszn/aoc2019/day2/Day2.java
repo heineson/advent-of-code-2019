@@ -1,5 +1,7 @@
 package se.heinszn.aoc2019.day2;
 
+import se.heinszn.aoc2019.common.IntcodeExecutor;
+
 import java.util.Map;
 
 public class Day2 {

@@ -1,4 +1,4 @@
-package se.heinszn.aoc2019.struct;
+package se.heinszn.aoc2019.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

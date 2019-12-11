@@ -1,11 +1,13 @@
 package se.heinszn.aoc2019.day5;
 
+import se.heinszn.aoc2019.common.IntcodeExecutor;
+
 import java.util.Arrays;
 import java.util.Map;
 
 public class Day5 {
     public static void main(String[] args) {
-        IntcodeExecutor2 intcodeExecutor = new IntcodeExecutor2(DAY5_PROGRAM);
+        IntcodeExecutor intcodeExecutor = new IntcodeExecutor(DAY5_PROGRAM);
         int[] execute = intcodeExecutor.execute(Map.of());
         System.out.println("Final state: " + Arrays.toString(execute));
     }
