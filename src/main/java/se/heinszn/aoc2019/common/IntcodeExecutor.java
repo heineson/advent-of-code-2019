@@ -1,5 +1,7 @@
 package se.heinszn.aoc2019.common;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
 
 import java.io.*;
@@ -11,6 +13,12 @@ import java.util.Map;
 public class IntcodeExecutor {
     private int[] program;
     private int pointer;
+    @Setter
+    private boolean pauseOnOutput;
+    @Getter
+    private boolean paused;
+    @Getter
+    private boolean exited;
 
     private DataInputStream dataInputStream;
     private DataOutputStream dataOutputStream;
@@ -23,6 +31,9 @@ public class IntcodeExecutor {
         this.program = program.clone();
         this.dataInputStream = new DataInputStream(inputStream);
         this.dataOutputStream = new DataOutputStream(outputStream);
+        this.pauseOnOutput = false;
+        this.paused = false;
+        this.exited = false;
     }
 
     public int[] execute() {
@@ -31,7 +42,12 @@ public class IntcodeExecutor {
 
     public int[] execute(Map<Integer, Integer> modifications) {
         modifications.forEach((key, value) -> program[key] = value);
-        this.pointer = 0;
+        if (!paused) {
+            this.pointer = 0;
+        } else {
+            paused = false;
+        }
+        exited = false;
 
         try {
             while (executeNext()) {
@@ -62,6 +78,10 @@ public class IntcodeExecutor {
             case OP_OUT:
                 try {
                     dataOutputStream.writeInt(getArg(args.get(0)));
+                    if (pauseOnOutput) {
+                        paused = true;
+                        return false;
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -83,6 +103,7 @@ public class IntcodeExecutor {
                 program[args.get(2).getValue()] = getArg(args.get(0)) == getArg(args.get(1)) ? 1 : 0;
                 break;
             case OP_END:
+                exited = true;
                 return false;
             default:
                 throw new IllegalStateException("Unknown opcode: " + instruction.getOpCode());
