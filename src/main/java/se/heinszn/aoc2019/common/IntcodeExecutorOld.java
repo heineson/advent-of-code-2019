@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class IntcodeExecutor {
+public class IntcodeExecutorOld {
     private int[] memory;
     private int pointer;
     private int relativeBase;
@@ -24,11 +24,11 @@ public class IntcodeExecutor {
     private DataInputStream dataInputStream;
     private DataOutputStream dataOutputStream;
 
-    public IntcodeExecutor(int[] program) {
+    public IntcodeExecutorOld(int[] program) {
         this(program, System.in, System.out);
     }
 
-    public IntcodeExecutor(int[] program, InputStream inputStream, OutputStream outputStream) {
+    public IntcodeExecutorOld(int[] program, InputStream inputStream, OutputStream outputStream) {
         this.memory = new int[65_536];
         Arrays.fill(this.memory, 0);
         System.arraycopy(program, 0, this.memory, 0, program.length);

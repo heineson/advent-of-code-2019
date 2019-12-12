@@ -1,6 +1,6 @@
 package se.heinszn.aoc2019.day2;
 
-import se.heinszn.aoc2019.common.IntcodeExecutor;
+import se.heinszn.aoc2019.common.IntcodeExecutorOld;
 
 import java.util.Map;
 
@@ -25,7 +25,7 @@ public class Day2 {
     }
 
     private static int runProgram(int noun, int verb) {
-        IntcodeExecutor executor = new IntcodeExecutor(DAY2_PROGRAM);
+        IntcodeExecutorOld executor = new IntcodeExecutorOld(DAY2_PROGRAM);
         return executor.execute(Map.of(1, noun, 2, verb))[0];
     }
 

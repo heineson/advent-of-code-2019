@@ -1,6 +1,6 @@
 package se.heinszn.aoc2019.day7;
 
-import se.heinszn.aoc2019.common.IntcodeExecutor;
+import se.heinszn.aoc2019.common.IntcodeExecutorOld;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 public class Amplifier {
-    private IntcodeExecutor executor;
+    private IntcodeExecutorOld executor;
     private ByteArrayInputStream inputStream;
     private ByteArrayOutputStream outputStream;
 
@@ -20,14 +20,14 @@ public class Amplifier {
         }
         this.inputStream = new ByteArrayInputStream(byteBuffer.array());
         this.outputStream = new ByteArrayOutputStream();
-        executor = new IntcodeExecutor(program, inputStream, outputStream);
+        executor = new IntcodeExecutorOld(program, inputStream, outputStream);
         executor.setPauseOnOutput(true);
     }
 
     public Amplifier(int[] program, ByteArrayInputStream inputStream) throws IOException  {
         this.inputStream = inputStream;
         this.outputStream = new ByteArrayOutputStream(4 * 10_000);
-        executor = new IntcodeExecutor(program, this.inputStream, outputStream);
+        executor = new IntcodeExecutorOld(program, this.inputStream, outputStream);
         executor.setPauseOnOutput(true);
     }
 

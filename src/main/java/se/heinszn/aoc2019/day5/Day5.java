@@ -1,19 +1,16 @@
 package se.heinszn.aoc2019.day5;
 
-import se.heinszn.aoc2019.common.IntcodeExecutor;
+import se.heinszn.aoc2019.common.IntcodeExecutorOld;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Map;
 
 public class Day5 {
     public static void main(String[] args) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        IntcodeExecutor intcodeExecutor = new IntcodeExecutor(DAY5_PROGRAM, new ByteArrayInputStream(ByteBuffer.allocate(4).putInt(5).array()), baos);
+        IntcodeExecutorOld intcodeExecutor = new IntcodeExecutorOld(DAY5_PROGRAM, new ByteArrayInputStream(ByteBuffer.allocate(4).putInt(5).array()), baos);
         int[] execute = intcodeExecutor.execute();
         System.out.println("Value: " + ByteBuffer.wrap(baos.toByteArray()).getInt());
         System.out.println("Final state: " + Arrays.toString(execute));
