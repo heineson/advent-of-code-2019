@@ -4,14 +4,20 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class IntcodeExecutor {
-    private int[] memory;
+    private BigInteger[] memory;
     private int pointer;
     private int relativeBase;
     @Setter
@@ -24,13 +30,22 @@ public class IntcodeExecutor {
     private DataInputStream dataInputStream;
     private DataOutputStream dataOutputStream;
 
-    public IntcodeExecutor(int[] program) {
+    public IntcodeExecutor(BigInteger[] program) {
         this(program, System.in, System.out);
     }
 
-    public IntcodeExecutor(int[] program, InputStream inputStream, OutputStream outputStream) {
-        this.memory = new int[65_536];
-        Arrays.fill(this.memory, 0);
+    public IntcodeExecutor(Path f, InputStream inputStream, OutputStream outputStream) throws IOException {
+        this(Files.lines(f)
+                    .flatMap(line -> Arrays.stream(line.split(",")))
+                    .map(BigInteger::new)
+                    .toArray(BigInteger[]::new),
+                inputStream,
+                outputStream);
+    }
+
+    public IntcodeExecutor(BigInteger[] program, InputStream inputStream, OutputStream outputStream) {
+        this.memory = new BigInteger[65_536];
+        Arrays.fill(this.memory, BigInteger.valueOf(0));
         System.arraycopy(program, 0, this.memory, 0, program.length);
 
         this.dataInputStream = new DataInputStream(inputStream);
@@ -41,12 +56,7 @@ public class IntcodeExecutor {
         this.exited = false;
     }
 
-    public int[] execute() {
-        return execute(Map.of());
-    }
-
-    public int[] execute(Map<Integer, Integer> modifications) {
-        modifications.forEach((key, value) -> memory[key] = value);
+    public void execute() {
         if (!paused) {
             this.pointer = 0;
             this.relativeBase = 0;
@@ -63,8 +73,6 @@ public class IntcodeExecutor {
             System.err.println(Arrays.toString(memory));
             throw new RuntimeException("Error at " + this.pointer, e);
         }
-
-        return memory.clone();
     }
 
     private boolean executeNext() {
@@ -73,17 +81,17 @@ public class IntcodeExecutor {
 
         switch (instruction.getOpCode()) {
             case OP_ADD:
-                memory[args.get(2).getValue()] = getArg(args.get(0)) + getArg(args.get(1));
+                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).add(getArg(args.get(1)));
                 break;
             case OP_MULT:
-                memory[args.get(2).getValue()] = getArg(args.get(0)) * getArg(args.get(1));
+                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).multiply(getArg(args.get(1)));
                 break;
             case OP_IN:
-                memory[args.get(0).getValue()] = read();
+                memory[args.get(0).getValue().intValueExact()] = BigInteger.valueOf(readInt());
                 break;
             case OP_OUT:
                 try {
-                    dataOutputStream.writeInt(getArg(args.get(0)));
+                    dataOutputStream.write(getArg(args.get(0)).toByteArray());
                     if (pauseOnOutput) {
                         paused = true;
                         return false;
@@ -93,23 +101,23 @@ public class IntcodeExecutor {
                 }
                 break;
             case OP_JIT:
-                if (getArg(args.get(0)) != 0) {
-                    pointer = getArg(args.get(1));
+                if (!getArg(args.get(0)).equals(BigInteger.ZERO)) {
+                    pointer = getArg(args.get(1)).intValueExact();
                 }
                 break;
             case OP_JIF:
-                if (getArg(args.get(0)) == 0) {
-                    pointer = getArg(args.get(1));
+                if (getArg(args.get(0)).equals(BigInteger.ZERO)) {
+                    pointer = getArg(args.get(1)).intValueExact();
                 }
                 break;
             case OP_LT:
-                memory[args.get(2).getValue()] = getArg(args.get(0)) < getArg(args.get(1)) ? 1 : 0;
+                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).compareTo(getArg(args.get(1))) < 0 ? BigInteger.ONE : BigInteger.ZERO;
                 break;
             case OP_EQ:
-                memory[args.get(2).getValue()] = getArg(args.get(0)) == getArg(args.get(1)) ? 1 : 0;
+                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).equals(getArg(args.get(1))) ? BigInteger.ONE : BigInteger.ZERO;
                 break;
             case OP_RB:
-                this.relativeBase += getArg(args.get(0));
+                this.relativeBase += getArg(args.get(0)).intValueExact();
                 break;
             case OP_END:
                 exited = true;
@@ -121,26 +129,26 @@ public class IntcodeExecutor {
         return true;
     }
 
-    private int getArg(Arg arg) {
+    private BigInteger getArg(Arg arg) {
         switch (arg.getMode()) {
             case I: return arg.getValue();
-            case P: return memory[arg.getValue()];
-            case R: return memory[this.relativeBase + arg.getValue()];
+            case P: return memory[arg.getValue().intValueExact()];
+            case R: return memory[this.relativeBase + arg.getValue().intValueExact()];
             default: throw new IllegalStateException("Unknown arg mode " + arg.getMode());
         }
     }
 
     private Instruction readInstruction() {
-        int op = memory[pointer++];
+        int op = memory[pointer++].intValueExact();
         OpCode opCode = OpCode.fromInt(op % 100);
-        int[] args = opCode.getParams() > 0
+        BigInteger[] args = opCode.getParams() > 0
                 ? Arrays.copyOfRange(memory, pointer, pointer + opCode.getParams())
-                : new int[]{};
+                : new BigInteger[]{};
         pointer += opCode.getParams();
 
         List<Arg> argList = new ArrayList<>();
         int modes = op / 100;
-        for (int arg : args) {
+        for (BigInteger arg : args) {
             argList.add(Arg.ofCode(modes % 10, arg));
             modes = modes / 10;
         }
@@ -148,7 +156,7 @@ public class IntcodeExecutor {
         return Instruction.of(opCode, argList);
     }
 
-    private int read() {
+    private int readInt() {
         try {
             return dataInputStream.readInt();
         } catch (IOException e) {
@@ -167,9 +175,9 @@ public class IntcodeExecutor {
         enum Mode {P, I, R}
 
         Mode mode;
-        int value;
+        BigInteger value;
 
-        static Arg ofCode(int mode, int value) {
+        static Arg ofCode(int mode, BigInteger value) {
             switch (mode) {
                 case 0: return Arg.of(Mode.P, value);
                 case 1: return Arg.of(Mode.I, value);
