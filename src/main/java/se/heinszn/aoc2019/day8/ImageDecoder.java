@@ -4,6 +4,7 @@ import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,29 @@ public class ImageDecoder {
 
     public Image getImage() {
         return image;
+    }
+
+    public String printImage() {
+        int[] canvas = new int[image.height * image.width];
+        Arrays.fill(canvas, 2);
+
+        List<List<Integer>> layers = this.image.getLayers();
+        Collections.reverse(layers);
+
+        layers.forEach(l -> {
+            for (int i = 0; i < l.size(); i++) {
+                canvas[i] = l.get(i) == 2 ? canvas[i] : l.get(i);
+            }
+        });
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < canvas.length; i++) {
+            sb.append(canvas[i] == 0 ? " " : "X");
+            if (i % image.width == image.width - 1) {
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
     }
 
     @Value

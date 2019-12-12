@@ -1,8 +1,10 @@
 package se.heinszn.aoc2019.day8;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class Day8 {
     public static void main(String[] args) {
@@ -12,9 +14,15 @@ public class Day8 {
         ImageDecoder decoder = new ImageDecoder(width, height, DAY8_IMAGE_DATA);
         ImageDecoder.Image image = decoder.getImage();
 
-        Map<List<Integer>, Long> layersWithZeroes = new HashMap<>();
-        image.getLayers().forEach(l -> layersWithZeroes.put(l, l.stream().filter(i -> i == 0).count()));
-        // TODO continue here
+        List<Integer> first = image.getLayers().stream()
+                .min((integers, t1) -> Long.compare(integers.stream().filter(i -> i == 0).count(), t1.stream().filter(i -> i == 0).count()))
+                .get();
+        long count = first.stream().filter(i -> i == 1).count() * first.stream().filter(i -> i == 2).count();
+
+        System.out.println("Part 1 result: " +count );
+
+        System.out.println("Part 2 image:");
+        System.out.println(decoder.printImage());
     }
 
     static String PART1_TEST = "123456789012";
