@@ -5,6 +5,7 @@ import se.heinszn.aoc2019.common.IntcodeExecutorOld;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -19,13 +20,28 @@ public class Day9 {
         test3();
 
         URI resource = Day9.class.getClassLoader().getResource("day9.txt").toURI();
+        part1(resource);
+        part2(resource);
+    }
+
+    private static void part1(URI program) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(1000);
         IntcodeExecutor executor = new IntcodeExecutor(
-                Path.of(resource),
+                Path.of(program),
                 new ByteArrayInputStream(ByteBuffer.allocate(4).putInt(1).array()),
                 outputStream);
         executor.execute();
         System.out.println("Part 1: " + new BigInteger(outputStream.toByteArray()));
+    }
+
+    private static void part2(URI program) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(1000);
+        IntcodeExecutor executor = new IntcodeExecutor(
+                Path.of(program),
+                new ByteArrayInputStream(ByteBuffer.allocate(4).putInt(2).array()),
+                outputStream);
+        executor.execute();
+        System.out.println("Part 2: " + new BigInteger(outputStream.toByteArray()));
     }
 
     private static void test1() {
