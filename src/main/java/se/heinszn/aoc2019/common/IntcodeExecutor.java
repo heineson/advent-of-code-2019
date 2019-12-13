@@ -81,13 +81,13 @@ public class IntcodeExecutor {
 
         switch (instruction.getOpCode()) {
             case OP_ADD:
-                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).add(getArg(args.get(1)));
+                memory[getWriteLocation(args.get(2))] = getArg(args.get(0)).add(getArg(args.get(1)));
                 break;
             case OP_MULT:
-                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).multiply(getArg(args.get(1)));
+                memory[getWriteLocation(args.get(2))] = getArg(args.get(0)).multiply(getArg(args.get(1)));
                 break;
             case OP_IN:
-                memory[args.get(0).getValue().intValueExact()] = BigInteger.valueOf(readInt());
+                memory[getWriteLocation(args.get(0))] = BigInteger.valueOf(readInt());
                 break;
             case OP_OUT:
                 try {
@@ -111,10 +111,10 @@ public class IntcodeExecutor {
                 }
                 break;
             case OP_LT:
-                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).compareTo(getArg(args.get(1))) < 0 ? BigInteger.ONE : BigInteger.ZERO;
+                memory[getWriteLocation(args.get(2))] = getArg(args.get(0)).compareTo(getArg(args.get(1))) < 0 ? BigInteger.ONE : BigInteger.ZERO;
                 break;
             case OP_EQ:
-                memory[args.get(2).getValue().intValueExact()] = getArg(args.get(0)).equals(getArg(args.get(1))) ? BigInteger.ONE : BigInteger.ZERO;
+                memory[getWriteLocation(args.get(2))] = getArg(args.get(0)).equals(getArg(args.get(1))) ? BigInteger.ONE : BigInteger.ZERO;
                 break;
             case OP_RB:
                 this.relativeBase += getArg(args.get(0)).intValueExact();
@@ -136,6 +136,13 @@ public class IntcodeExecutor {
             case R: return memory[this.relativeBase + arg.getValue().intValueExact()];
             default: throw new IllegalStateException("Unknown arg mode " + arg.getMode());
         }
+    }
+
+    private int getWriteLocation(Arg dest) {
+        if (dest.getMode() == Arg.Mode.R) {
+            return this.relativeBase + dest.getValue().intValueExact();
+        }
+        return dest.getValue().intValueExact();
     }
 
     private Instruction readInstruction() {
