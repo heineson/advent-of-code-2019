@@ -1,5 +1,8 @@
 package se.heinszn.aoc2019.day10;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Day10 {
     public static void main(String[] args) {
         test1();
@@ -11,6 +14,14 @@ public class Day10 {
         AsteroidCalculator calculator = new AsteroidCalculator(DAY10_INPUT);
         AsteroidCalculator.Coord coord = calculator.calculateAll();
         System.out.println("Part 1: coord: " + coord + ", seen: " + calculator.getAsteroidsSeenFromCoord(coord));
+
+        test6();
+        test7();
+
+        List<AsteroidCalculator.Coord> allRemoved = new ArrayList<>();
+        while (allRemoved.addAll(calculator.removeVisibleFromCoord(coord))) { /* empty */}
+        AsteroidCalculator.Coord a200th = allRemoved.get(199);
+        System.out.println("Part2: removed as #200: " + a200th + ", answer: " + (a200th.getX() * 100 + a200th.getY()));
     }
 
     static void test1() {
@@ -42,6 +53,20 @@ public class Day10 {
         AsteroidCalculator calculator = new AsteroidCalculator(TEST5);
         AsteroidCalculator.Coord coord = calculator.calculateAll();
         System.out.println("Test5: coord: " + coord + ", seen: " + calculator.getAsteroidsSeenFromCoord(coord));
+    }
+
+    static void test6() {
+        AsteroidCalculator calculator = new AsteroidCalculator(TEST6);
+        calculator.calculateAll();
+        List<AsteroidCalculator.Coord> coords = calculator.removeVisibleFromCoord(AsteroidCalculator.Coord.of(8, 3));
+        System.out.println("Test6: removed iteration 1: " + coords);
+    }
+
+    static void test7() {
+        AsteroidCalculator calculator = new AsteroidCalculator(TEST5);
+        List<AsteroidCalculator.Coord> allRemoved = new ArrayList<>();
+        while (allRemoved.addAll(calculator.removeVisibleFromCoord(AsteroidCalculator.Coord.of(11, 13)))) { /* empty */}
+        System.out.println("Test7: removed as #200: " + allRemoved.get(199));
     }
 
     static String TEST1 = ".#..#\n" +
@@ -99,6 +124,11 @@ public class Day10 {
             ".#.#.###########.###\n" +
             "#.#.#.#####.####.###\n" +
             "###.##.####.##.#..##";
+    static String TEST6 = ".#....#####...#..\n" +
+            "##...##.#####..##\n" +
+            "##...#...#.#####.\n" +
+            "..#.....X...###..\n" +
+            "..#.#.....#....##";
 
     static String DAY10_INPUT = ".#....#.###.........#..##.###.#.....##...\n" +
             "...........##.......#.#...#...#..#....#..\n" +

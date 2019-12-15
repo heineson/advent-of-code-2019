@@ -2,10 +2,13 @@ package se.heinszn.aoc2019.day10;
 
 import lombok.Value;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 public class AsteroidCalculator {
@@ -13,6 +16,7 @@ public class AsteroidCalculator {
     private final int height;
 
     private Map<Coord, Long> asteroids = new HashMap<>();
+    private List<Coord> destroyed = new ArrayList<>();
 
     public AsteroidCalculator(String map) {
         String[] lines = map.split("\n");
@@ -40,7 +44,10 @@ public class AsteroidCalculator {
     }
 
     public Coord calculateAll() {
-        asteroids.keySet().forEach(coord -> asteroids.put(coord, calculateForCoord(coord)));
+        asteroids.keySet().forEach(coord -> {
+            List<Coord> visibleFromCoord = getVisibleFromCoord(coord);
+            asteroids.put(coord, (long) visibleFromCoord.size());
+        });
 
         long max = 0;
         Coord coord = null;
@@ -53,15 +60,35 @@ public class AsteroidCalculator {
         return coord;
     }
 
+    public List<Coord> removeVisibleFromCoord(Coord coord) {
+        List<Coord> visibleFromCoord = getVisibleFromCoord(coord);
+
+        ToDoubleFunction<Coord> comparator = c -> {
+            double rad = Math.PI / 2 + Math.atan2(c.getY() - coord.getY(), c.getX() - coord.getX());
+            if (rad < 0.0) {
+                rad = Math.PI * 2 + rad;
+            }
+            return rad;
+        };
+
+        visibleFromCoord.sort(Comparator.comparingDouble(comparator));
+
+        visibleFromCoord.forEach(c -> {
+            destroyed.add(c);
+            asteroids.remove(c);
+        });
+        return visibleFromCoord;
+    }
+
     public long getAsteroidsSeenFromCoord(Coord coord) {
         return asteroids.getOrDefault(coord, 0L);
     }
 
-    private long calculateForCoord(Coord asteroid) {
+    private List<Coord> getVisibleFromCoord(Coord asteroid) {
         return asteroids.keySet().stream()
                 .filter(coord -> !asteroid.equals(coord))
                 .filter(coord -> isVisible(asteroid, coord))
-                .count();
+                .collect(Collectors.toList());
     }
 
     private boolean isVisible(Coord from, Coord to) {
