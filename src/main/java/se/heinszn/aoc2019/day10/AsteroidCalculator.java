@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class AsteroidCalculator {
     private final int width;
@@ -66,34 +65,42 @@ public class AsteroidCalculator {
     }
 
     private boolean isVisible(Coord from, Coord to) {
-        double m = from.getY() - to.getY() == 0
-                ? 1.0
-                : (from.getX() - to.getX()) * 1.0 / (from.getY() - to.getY());
-
-        double b = from.getY() * 1.0 - m * from.getX();
-        System.out.println("From: " + from + ", to: " + to + String.format("y=%f * x + %f", m, b));
-
+        boolean viewObstructed;
         List<Coord> others = asteroids.keySet().stream()
                 .filter(coord -> !coord.equals(from) && !coord.equals(to))
+                .filter(coord -> coord.getX() <= Math.max(from.getX(), to.getX()))
+                .filter(coord -> coord.getX() >= Math.min(from.getX(), to.getX()))
+                .filter(coord -> coord.getY() <= Math.max(from.getY(), to.getY()))
+                .filter(coord -> coord.getY() >= Math.min(from.getY(), to.getY()))
                 .collect(Collectors.toList());
-        boolean viewObstructed = others.stream()
-                .anyMatch(coord -> isOnLine(coord, m, b));
-        viewObstructed = viewObstructed || isOnVerticalLine(from, to, others); // TODO continue here
+
+        if (from.getX() != to.getX()) {
+            if (from.getY() == to.getY()) {
+                viewObstructed = others.stream().map(Coord::getY).anyMatch(y -> from.getY() == y);
+            } else {
+                double[] mAndB = getLineEq(from, to);
+
+                viewObstructed = others.stream()
+                        .anyMatch(coord -> isOnLine(from, coord, mAndB[0], mAndB[1]));
+            }
+        } else {
+            viewObstructed = others.stream().map(Coord::getX).anyMatch(x -> from.getX() == x);
+        }
+
         return !viewObstructed;
     }
 
-    private boolean isOnVerticalLine(Coord from, Coord to, List<Coord> others) {
-        if (from.getX() - to.getX() != 0) {
-            return false;
-        }
-        return others.stream().map(Coord::getX).anyMatch(y -> from.getX() == y);
+    private boolean isOnLine(Coord from, Coord coord, double m, double b) {
+        double[] mAndB = getLineEq(from, coord);
+        return m == mAndB[0] && b == mAndB[1];
     }
 
-    private boolean isOnLine(Coord coord, double m, double b) {
-        double y = coord.getY() * 1.0;
-        double x = coord.getX() * 1.0;
-        System.out.println("Coord: " + coord + ", y=" + y + ", mx+b=" + (m*x + b));
-        return y == m*x + b;
+    private double[] getLineEq(Coord from, Coord to) {
+        double m = (from.getX() - to.getX()) * 1.0 / (from.getY() - to.getY());
+        return new double[] {
+                m,
+                from.getY() * 1.0 - m * from.getX()
+        };
     }
 
     @Value(staticConstructor = "of")
