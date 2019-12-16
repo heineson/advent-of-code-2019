@@ -26,8 +26,8 @@ public class PaintingRobot {
     private Map<Coord, Integer> paintedPanels;
 
     public PaintingRobot(Path program) throws IOException {
-        this.inputData = ByteBuffer.allocate(1000);
-        outputStream = new ByteArrayOutputStream(1000);
+        this.inputData = ByteBuffer.allocate(65_536);
+        outputStream = new ByteArrayOutputStream(65_536);
         this.executor = new IntcodeExecutor(program, new ByteArrayInputStream(this.inputData.array()), outputStream);
         this.executor.setPauseOnOutput(true);
 
@@ -43,7 +43,6 @@ public class PaintingRobot {
             inputData.putInt(color);
 
             // run until 1st output
-            System.out.println("RUNNING");
             executor.execute();
             if (executor.isExited()) {
                 break;
@@ -51,7 +50,6 @@ public class PaintingRobot {
             int newColor = readOutput();
 
             // run until 2nd output
-            System.out.println("RUNNING2");
             executor.execute();
             int turn = readOutput();
 
@@ -68,11 +66,8 @@ public class PaintingRobot {
 
     private int readOutput() {
         byte[] bytes = outputStream.toByteArray();
-        System.out.println(Arrays.toString(bytes));
-        System.out.println(new BigInteger(bytes));
-        int reply = ByteBuffer.wrap(bytes).getInt();
         outputStream.reset();
-        return reply;
+        return new BigInteger(bytes).intValueExact();
     }
 
     enum Direction {
@@ -82,8 +77,8 @@ public class PaintingRobot {
             switch (this) {
                 case U: return Coord.of(pos.getX(), pos.getY() + 1);
                 case R: return Coord.of(pos.getX() + 1, pos.getY());
-                case D: return Coord.of(pos.getX() - 1, pos.getY());
-                case L: return Coord.of(pos.getX(), pos.getY() - 1);
+                case D: return Coord.of(pos.getX(), pos.getY() - 1);
+                case L: return Coord.of(pos.getX() - 1, pos.getY());
                 default: throw new IllegalStateException();
             }
         }

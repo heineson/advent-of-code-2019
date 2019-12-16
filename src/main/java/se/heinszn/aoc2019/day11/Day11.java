@@ -9,7 +9,7 @@ import java.nio.file.Path;
 
 public class Day11 {
     public static void main(String[] args) throws URISyntaxException, IOException {
-        URI resource = Day9.class.getClassLoader().getResource("day9.txt").toURI();
+        URI resource = Day9.class.getClassLoader().getResource("day11.txt").toURI();
         PaintingRobot paintingRobot = new PaintingRobot(Path.of(resource));
 
         paintingRobot.run();
