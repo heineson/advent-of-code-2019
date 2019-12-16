@@ -25,7 +25,7 @@ public class PaintingRobot {
     private Coord currPos;
     private Map<Coord, Integer> paintedPanels;
 
-    public PaintingRobot(Path program) throws IOException {
+    public PaintingRobot(Path program, Integer initialColor) throws IOException {
         this.inputData = ByteBuffer.allocate(65_536);
         outputStream = new ByteArrayOutputStream(65_536);
         this.executor = new IntcodeExecutor(program, new ByteArrayInputStream(this.inputData.array()), outputStream);
@@ -34,6 +34,9 @@ public class PaintingRobot {
         this.currDirection = Direction.U;
         this.currPos = Coord.of(0,0);
         this.paintedPanels = new HashMap<>();
+        if (initialColor != null) {
+            this.paintedPanels.put(this.currPos, initialColor);
+        }
     }
 
     public void run() {
@@ -62,6 +65,22 @@ public class PaintingRobot {
 
     public Map<Coord, Integer> getPaintedPanels() {
         return new HashMap<>(this.paintedPanels);
+    }
+
+    public void printImage() {
+        int minY = this.paintedPanels.keySet().stream().mapToInt(Coord::getY).min().getAsInt();
+        int maxY = this.paintedPanels.keySet().stream().mapToInt(Coord::getY).max().getAsInt();
+        int minX = this.paintedPanels.keySet().stream().mapToInt(Coord::getX).min().getAsInt();
+        int maxX = this.paintedPanels.keySet().stream().mapToInt(Coord::getX).max().getAsInt();
+
+        StringBuilder sb = new StringBuilder();
+        for (int y = maxY; y >= minY; y--) {
+            for (int x = minX; x <= maxX; x++) {
+                sb.append(paintedPanels.getOrDefault(Coord.of(x, y), BLACK) == BLACK ? " " : "X");
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb.toString());
     }
 
     private int readOutput() {
