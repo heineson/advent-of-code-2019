@@ -26,6 +26,9 @@ public class IntcodeExecutor {
     private boolean paused;
     @Getter
     private boolean exited;
+    @Getter
+    @Setter
+    private boolean readFlag;
 
     private DataInputStream dataInputStream;
     private DataOutputStream dataOutputStream;
@@ -54,6 +57,7 @@ public class IntcodeExecutor {
         this.pauseOnOutput = false;
         this.paused = false;
         this.exited = false;
+        this.readFlag = false;
     }
 
     public void setMemoryAddress(int pos, BigInteger value) {
@@ -169,6 +173,7 @@ public class IntcodeExecutor {
 
     private int readInt() {
         try {
+            readFlag = true;
             return dataInputStream.readInt();
         } catch (IOException e) {
             throw new RuntimeException(e);

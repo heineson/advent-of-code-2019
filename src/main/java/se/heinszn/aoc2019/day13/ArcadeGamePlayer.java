@@ -17,6 +17,9 @@ public class ArcadeGamePlayer {
     private final IntcodeExecutor executor;
 
     private Map<Point, TileType> screen;
+    private int score;
+    private int currBallX;
+    private int currPaddleX;
 
     public ArcadeGamePlayer(Path program) throws Exception {
         this.inputData = ByteBuffer.allocate(65_536);
@@ -25,12 +28,17 @@ public class ArcadeGamePlayer {
         this.executor.setPauseOnOutput(true);
 
         screen = new HashMap<>();
+        score = -1;
+        currBallX = -1;
+        currPaddleX = -1;
     }
 
     public void run(int quarters) {
         if (quarters > 0) {
             executor.setMemoryAddress(0, BigInteger.valueOf(quarters));
         }
+        executor.setReadFlag(false);
+        inputData.putInt(-1);
 
         while (!executor.isExited()) {
             executor.execute();
@@ -43,9 +51,37 @@ public class ArcadeGamePlayer {
             int y = readOutput();
 
             executor.execute();
-            int tileType = readOutput();
+            int input = readOutput();
+            if (x == -1 && y == 0) {
+                score = input;
+            } else {
+                TileType tileType = TileType.ofInt(input);
+                if (TileType.BALL.equals(tileType)) {
+                    currBallX = x;
+                    adjustPaddle();
+                } else if (TileType.PADDLE.equals(tileType)) {
+                    currPaddleX = x;
+                }
+                screen.put(Point.of(x, y), tileType);
+            }
 
-            screen.put(Point.of(x, y), TileType.ofInt(tileType));
+        }
+    }
+
+    private void adjustPaddle() {
+        if (currPaddleX == -1 || currBallX == -1) {
+            return;
+        }
+
+        if (executor.isReadFlag()) {
+            executor.setReadFlag(false);
+            int res = Integer.compare(currBallX, currPaddleX);
+            if (res < 0) {
+                res = -1;
+            } else if (res > 0) {
+                res = 1;
+            }
+            inputData.putInt(res);
         }
     }
 
@@ -57,6 +93,10 @@ public class ArcadeGamePlayer {
 
     public Map<Point, TileType> getScreen() {
         return screen;
+    }
+
+    public int getScore() {
+        return score;
     }
 
     enum TileType {
