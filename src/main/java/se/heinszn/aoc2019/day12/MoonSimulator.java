@@ -1,15 +1,35 @@
 package se.heinszn.aoc2019.day12;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MoonSimulator {
+    private final Map<Moon, Position> initialState;
     private Map<Moon, Position> moonPositions;
 
+    private BigInteger iterations;
+    private Map<Moon, BigInteger[]> periods;
+
     public MoonSimulator(Map<Moon, Position> initialPositions) {
+        this.initialState = new HashMap<>();
+        initialPositions.forEach((moon, position) -> {
+            initialState.put(moon, new Position(position.getX(), position.getY(), position.getZ(),
+                    position.getVx(), position.getVy(), position.getVz()));
+        });
         this.moonPositions = new HashMap<>(initialPositions);
+
+        this.iterations = BigInteger.ZERO;
+        this.periods = new HashMap<>();
+        initialPositions.forEach((moon, position) -> {
+            periods.put(moon, new BigInteger[] { BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO });
+        });
     }
 
     public void nextTimeStep() {
@@ -30,6 +50,58 @@ public class MoonSimulator {
             sum += pot * kin;
         }
         return sum;
+    }
+
+    public void iterationsUntilNextInitialState() {
+        boolean done = false;
+        while (!done) {
+            nextTimeStep();
+            iterations = iterations.add(BigInteger.ONE);
+            checkAll();
+            done = periods.values().stream()
+                    .flatMap(Arrays::stream)
+                    .noneMatch(BigInteger.ZERO::equals);
+        }
+        System.out.println("Final result:");
+        periods.forEach((moon, bigIntegers) -> {
+            System.out.println(moon + ": " + Arrays.toString(bigIntegers));
+        });
+    }
+// 5780547156
+// 290044118
+// 130537073472
+// 552708
+// 5780547156 290044118 130537073472 552708 // Least common multiple of these is too big!
+    private void checkAll() {
+        this.moonPositions.forEach((moon, position) -> {
+            Position ip = initialState.get(moon);
+
+            // x
+            if (position.getX() == ip.getX() && position.getVx() == ip.getVx()) {
+                if (periods.get(moon)[0].equals(BigInteger.ZERO)) {
+                    System.out.println("Found period for " + moon + " X: " + iterations);
+                    periods.get(moon)[0] = this.iterations;
+                }
+            }
+
+            // y
+            if (position.getY() == ip.getY() && position.getVy() == ip.getVy()) {
+                if (periods.get(moon)[1].equals(BigInteger.ZERO)) {
+                    System.out.println("Found period for " + moon + " Y: " + iterations);
+                    periods.get(moon)[1] = this.iterations;
+                }
+            }
+
+            // z
+            if (position.getZ() == ip.getZ() && position.getVz() == ip.getVz()) {
+                if (periods.get(moon)[2].equals(BigInteger.ZERO)) {
+                    System.out.println("Found period for " + moon + " Z: " + iterations);
+                    periods.get(moon)[2] = this.iterations;
+                }
+            }
+
+
+        });
     }
 
     private void applyGravities() {
@@ -80,6 +152,7 @@ public class MoonSimulator {
     @Getter
     @AllArgsConstructor
     @ToString
+    @EqualsAndHashCode
     static class Position {
         int x;
         int y;

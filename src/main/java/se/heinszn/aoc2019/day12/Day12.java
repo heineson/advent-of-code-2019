@@ -1,5 +1,6 @@
 package se.heinszn.aoc2019.day12;
 
+import java.math.BigInteger;
 import java.util.Map;
 
 public class Day12 {
@@ -8,6 +9,7 @@ public class Day12 {
         test1();
         test2();
         part1();
+        part2();
     }
 
     static void test1() {
@@ -58,6 +60,16 @@ public class Day12 {
         System.out.println("\nPart 1:");
         printStep(simulator.getMoonPositions());
         System.out.println("Total energy after 1000 steps: " + simulator.calculateEnergy());
+    }
+
+    static void part2() {
+        MoonSimulator simulator = new MoonSimulator(Map.of(
+                MoonSimulator.Moon.I, MoonSimulator.Position.of(4, 1, 1),
+                MoonSimulator.Moon.E, MoonSimulator.Position.of(11, -18, -1),
+                MoonSimulator.Moon.G, MoonSimulator.Position.of(-2, -10, -4),
+                MoonSimulator.Moon.C, MoonSimulator.Position.of(-7, -2, 14)
+        ));
+        simulator.iterationsUntilNextInitialState();
     }
 
     static void printStep(Map<MoonSimulator.Moon, MoonSimulator.Position> moonPositions) {
