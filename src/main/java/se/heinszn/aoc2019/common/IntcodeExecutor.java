@@ -56,6 +56,10 @@ public class IntcodeExecutor {
         this.exited = false;
     }
 
+    public void setMemoryAddress(int pos, BigInteger value) {
+        this.memory[pos] = value;
+    }
+
     public void execute() {
         if (!paused) {
             this.pointer = 0;
