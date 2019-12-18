@@ -1,5 +1,7 @@
 package se.heinszn.aoc2019.day15;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.Value;
 import se.heinszn.aoc2019.common.IntcodeExecutor;
 
@@ -20,26 +22,18 @@ public class RepairDroid {
     private final IntcodeExecutor executor;
 
     private Position currentPos;
-    private Direction currDirection;
     private Set<Position> walls;
     private Set<Position> visited;
 
     public RepairDroid(Path program) throws IOException {
-        this.inputData = ByteBuffer.allocate(80_000_000);
+        this.inputData = ByteBuffer.allocate(100_000_000 * 4);
         outputStream = new ByteArrayOutputStream(65_536);
         this.executor = new IntcodeExecutor(program, new ByteArrayInputStream(this.inputData.array()), outputStream);
         this.executor.setPauseOnOutput(true);
 
         this.currentPos = Position.of(0, 0);
-        this.currDirection = Direction.N;
         this.walls = new HashSet<>();
         this.visited = new HashSet<>();
-        this.visited.add(this.currentPos);
-    }
-
-    public Position findOxygenTankPos() {
-        run(-1, -1);
-        return currentPos;
     }
 
     public void printMap() {
@@ -64,84 +58,75 @@ public class RepairDroid {
         System.out.println(sb.toString());
     }
 
-    /**
-     * Steps per loop:
-     * - Accept a movement command via an input instruction.
-     * - Send the movement command to the repair droid.
-     * - Wait for the repair droid to finish the movement operation.
-     * - Report on the status of the repair droid via an output instruction.
-     */
-    private void run(int x, int y) {
-        if (x != -1 || y != -1) {
-        }
+    public List<Position> solveBfs() {
+        LinkedList<Position> nextToVisit = new LinkedList<>();
+        Position start = Position.of(0, 0);
+        currentPos = start;
+        nextToVisit.add(start);
 
-        boolean done = false;
-        long loops = 0;
-        while (!done) {
-            inputData.putInt(this.currDirection.asInt());
+        while (!nextToVisit.isEmpty()) {
+            Position cur = nextToVisit.remove();
 
-            executor.execute();
-            if (executor.isExited()) {
-                break;
+            if (!currentPos.equals(cur)) {
+                int statusCode = advanceTo(cur);
+                switch (statusCode) {
+                    case 0:
+                        walls.add(cur);
+                        this.visited.add(cur);
+                        cur = currentPos; // reset, as the droid never moves
+                        break;
+                    case 1:
+                        currentPos = cur;
+                        break;
+                    case 2:
+                        currentPos = cur;
+                        return backtrackPath(cur);
+                    default:
+                        throw new IllegalStateException("Unknown status code: " + statusCode);
+                }
             }
 
-            int statusCode = readOutput();
-            Position nextPosition = this.currentPos.addDirection(this.currDirection);
-            switch (statusCode) {
-                case 0:
-                    walls.add(nextPosition);
-                    newDirection();
-                    break;
-                case 1:
-                    currentPos = nextPosition;
-                    this.visited.add(currentPos);
-                    break;
-                case 2:
-                    currentPos = nextPosition;
-                    this.visited.add(currentPos);
-                    done = true;
-                    break;
-                default: throw new IllegalStateException("Unknown status code: " + statusCode);
+            if (visited.contains(cur)) {
+                continue;
             }
-            if (++loops % 1_000_000 == 0) {
-                System.out.println("  loops: " + loops);
+
+//            if (maze.isWall(cur.getX(), cur.getY())) {
+//                visited.add(cur);
+//                continue;
+//            }
+            visited.add(cur);
+            for (Direction d : Direction.values()) {
+                Position coordinate = cur.addDirection(d);
+                nextToVisit.add(coordinate);
             }
         }
-    }
-// TODO Try BFS algo: https://www.baeldung.com/java-solve-maze
-    private void newDirection() {
-        List<Direction> possible = Arrays.stream(Direction.values())
-                .filter(d -> !walls.contains(currentPos.addDirection(d)))
-                .collect(Collectors.toList());
-        List<Direction> preferred = possible.stream()
-                .filter(d -> !visited.contains(currentPos.addDirection(d)))
-                .collect(Collectors.toList());
-
-        Direction randomDir;
-        if (preferred.size() > 0) {
-            randomDir = preferred.get(random.nextInt(preferred.size()));
-        } else {
-            randomDir = possible.get(random.nextInt(possible.size()));
-        }
-//        do {
-//            randomDir = Direction.fromInt(random.nextInt(4) + 1);
-//        } while (randomDir == this.currDirection || walls.contains(this.currentPos.addDirection(randomDir)));
-        this.currDirection = randomDir;
-
-//        this.currDirection = Arrays.stream(Direction.values())
-//                .filter(d -> !walls.contains(currentPos.addDirection(d)))
-//                .max(this::compareDirs).get();
-//        System.out.println(this.currDirection + ", " + Arrays.stream(Direction.values())
-//                .filter(d -> !walls.contains(currentPos.addDirection(d)))
-//                .sorted(this::compareDirs).collect(Collectors.toList()));
+        System.out.println("WHY?");
+        return Collections.emptyList();
     }
 
-//    private int compareDirs(Direction d1, Direction d2) {
-//        int d1Score = visited.contains(this.currentPos.addDirection(d1)) ? 1000 : 10;
-//        int d2Score = visited.contains(this.currentPos.addDirection(d1)) ? 1000 : 10;
-//
-//        return Integer.compare(d1Score, d2Score);
-//    }
+    private int advanceTo(Position position) {
+        Direction d = Direction.get(currentPos, position);
+        inputData.putInt(d.asInt());
+
+        executor.execute();
+        if (executor.isExited()) {
+            throw new IllegalStateException("Program should not exit by itself");
+        }
+
+        return readOutput();
+    }
+
+    private List<Position> backtrackPath(Position cur) {
+        List<Position> path = new ArrayList<>();
+        Position iter = cur;
+
+        while (iter != null) {
+            path.add(iter);
+            iter = iter.getParent();
+        }
+
+        return path;
+    }
 
     private int readOutput() {
         byte[] bytes = outputStream.toByteArray();
@@ -153,13 +138,19 @@ public class RepairDroid {
     static class Position {
         int x;
         int y;
+        @EqualsAndHashCode.Exclude
+        Position parent;
+
+        static Position of(int x, int y) {
+            return Position.of(x, y, null);
+        }
 
         public Position addDirection(Direction d) {
             switch (d) {
-                case N: return Position.of(x, y + 1);
-                case S: return Position.of(x, y - 1);
-                case W: return Position.of(x - 1, y);
-                case E: return Position.of(x + 1, y);
+                case N: return Position.of(x, y + 1, this);
+                case S: return Position.of(x, y - 1, this);
+                case W: return Position.of(x - 1, y, this);
+                case E: return Position.of(x + 1, y, this);
                 default: throw new IllegalArgumentException("Unknown direction: " + d);
             }
         }
@@ -185,6 +176,23 @@ public class RepairDroid {
                 case 3: return W;
                 case 4: return E;
                 default: throw new IllegalArgumentException("Unknown direction: " + d);
+            }
+        }
+
+        static Direction get(Position from, Position to) {
+            int xdiff = from.getX() - to.getX();
+            int ydiff = from.getY() - to.getY();
+
+            if (xdiff < 0) {
+                return E;
+            } else if (xdiff > 0) {
+                return W;
+            } else if (ydiff < 0) {
+                return N;
+            } else if (ydiff > 0) {
+                return S;
+            } else {
+                throw new IllegalArgumentException("Points not off by one in x or y: " + from + ", " + to);
             }
         }
     }

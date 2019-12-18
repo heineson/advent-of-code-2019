@@ -8,7 +8,7 @@ public class Day15 {
         URI resource = Day15.class.getClassLoader().getResource("day15.txt").toURI();
         RepairDroid repairDroid = new RepairDroid(Path.of(resource));
         try {
-            System.out.println(repairDroid.findOxygenTankPos());
+            System.out.println(repairDroid.solveBfs());
         } finally {
             repairDroid.printMap();
         }
